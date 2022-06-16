@@ -28,11 +28,20 @@ import re
 import logging
 from datetime import datetime
 
+import tensorflow as tf
+from tensorflow import keras
+
+
+def load_speech_rec_model_from(path: str):
+    if not os.path.exists(path):
+        print(f"Could not find model under path {path}! Closing application ...")
+        exit(-1)
+    loaded_model = keras.load_model(path)
+    return loaded_model
+
 
 app = Flask(__name__)
-
-def detection_loop(speech_file):
-    pass
+model = load_speech_rec_model_from("placeholder_path")
 
 
 # routing http posts to this method
@@ -63,15 +72,16 @@ def main():
     return status_code
 
 
-# image=cv2.imread(args.input)
-# image=cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
-
 def get_file_from_request(accepted_types, file_name="file"):
     speech_file = request.files[file_name]
     filetype = speech_file.filename.split('.')[-1]
     if filetype not in accepted_types:
         raise AssertionError
     return speech_file
+
+
+def detection_loop(speech_file):
+    pass
 
 
 if __name__ == '__main__':
