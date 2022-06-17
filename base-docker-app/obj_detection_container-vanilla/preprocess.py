@@ -1,6 +1,6 @@
 # includes all necessary preprocessing steps for speech recognition
 # based on https://www.tensorflow.org/tutorials/audio/simple_audio
-# returns: train, test and validation sets
+# returns: train, test and validation sets + commands and spectrogram_ds
  
 import numpy as np
 import tensorflow as tf
