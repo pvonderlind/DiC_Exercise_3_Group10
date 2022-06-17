@@ -17,7 +17,6 @@ import os
 import tflite_runtime.interpreter as tflite
 import platform
 import datetime
-import cv2
 import time
 import numpy as np
 import io
@@ -27,9 +26,16 @@ import random
 import re
 import logging
 from datetime import datetime
+import pathlib
 
 import tensorflow as tf
 from tensorflow import keras
+from preprocess import preprocess
+
+
+######## TODO ########
+# how does the speech file look like?
+# calculate inference time (time it takes for the application to perform speech recognition)
 
 
 def load_speech_rec_model_from(path: str):
@@ -41,7 +47,7 @@ def load_speech_rec_model_from(path: str):
 
 
 app = Flask(__name__)
-model = load_speech_rec_model_from("placeholder_path")
+model = load_speech_rec_model_from("saved_model/speech_rec_model")
 
 
 # routing http posts to this method
@@ -81,7 +87,31 @@ def get_file_from_request(accepted_types, file_name="file"):
 
 
 def detection_loop(speech_file):
-    pass
+    # ?????? how does the speech_file look like ??????
+    # if it only contains audio (no label):
+    #y_pred = np.argmax(model.predict(speech_file), axis=1)
+
+    # if speech_file is entire dataset and prediction is made on test dataset
+    t, test_ds, x, y, z = preprocess(pathlib.Path(speech_file))
+    test_audio = []
+    test_labels = []
+
+    for audio, label in test_ds:
+        test_audio.append(audio.numpy())
+        test_labels.append(label.numpy())
+
+    test_audio = np.array(test_audio)
+    test_labels = np.array(test_labels)
+
+    y_pred = np.argmax(model.predict(test_audio), axis=1)
+    y_true = test_labels
+
+    # calculate the accuracy
+    test_acc = sum(y_pred == y_true) / len(y_true)
+    print(test_acc)
+
+    # save the prediction
+    np.savetxt("prediction.csv", y_pred, delimiter=",")
 
 
 if __name__ == '__main__':
