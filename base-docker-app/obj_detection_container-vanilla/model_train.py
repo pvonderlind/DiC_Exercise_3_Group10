@@ -5,8 +5,14 @@ from tensorflow.keras import layers, models
 import tensorflow as tf
 import pathlib
 
+import argparse
 
-path = 'path_to_dataset'
+parser = argparse.ArgumentParser(description='Train a speech recognition model for a given dataset.')
+parser.add_argument('path', type=str, help="The path to the folder containing the training files.")
+
+
+args = parser.parse_args()
+path = args.path
 data_dir = pathlib.Path(path)
 
 # preprocess the speech_file
