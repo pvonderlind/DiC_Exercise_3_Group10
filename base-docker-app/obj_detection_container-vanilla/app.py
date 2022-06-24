@@ -27,6 +27,8 @@ import re
 import logging
 from datetime import datetime
 import pathlib
+import argparse
+from preprocess import decode_audio, get_spectrogram
 
 import tensorflow as tf
 from tensorflow import keras
@@ -42,12 +44,19 @@ def load_speech_rec_model_from(path: str):
     if not os.path.exists(path):
         print(f"Could not find model under path {path}! Closing application ...")
         exit(-1)
-    loaded_model = keras.load_model(path)
+    loaded_model = keras.models.load_model(path)
+    print(f"Successfully loaded pretrained tensorflow model from path {path}")
     return loaded_model
 
 
+parser = argparse.ArgumentParser(description="Run a Flask API offering a REST API for speech recognition of a"
+                                             "pretrained deep learning model in tensorflow.")
+parser.add_argument("model_path", type=str, help="Path to the pretrained tensorflow model in .pb format.")
+args = parser.parse_args()
+model_path = args.model_path
+
 app = Flask(__name__)
-model = load_speech_rec_model_from("saved_model/speech_rec_model")
+model = load_speech_rec_model_from(model_path)
 
 
 # routing http posts to this method
@@ -66,52 +75,65 @@ def main():
         return Response(status=415)
 
     try:
-        speech_file = get_file_from_request(accepted_formats)
+        speech_file = get_file_binaries_from_request(accepted_formats)
     except KeyError:
         return Response(status=400)
     except AssertionError:
         return Response(status=400)
 
-    detection_loop(speech_file)
-
+    predicted_label, prediction_time = detection_loop(speech_file)
+    data = {"label": predicted_label, "time": prediction_time}
     status_code = Response(status=200)
-    return status_code
+    return jsonify(data), status_code
 
 
-def get_file_from_request(accepted_types, file_name="file"):
+def get_file_binaries_from_request(accepted_types, file_name="file"):
     speech_file = request.files[file_name]
     filetype = speech_file.filename.split('.')[-1]
     if filetype not in accepted_types:
         raise AssertionError
-    return speech_file
+    return speech_file.read()
 
 
-def detection_loop(speech_file):
+def detection_loop(audio_binary):
+    # TODO: --> Speech_file is a SINGLE .wav speech file in binary format passed via the POST or GET request.
     # ?????? how does the speech_file look like ??????
     # if it only contains audio (no label):
-    #y_pred = np.argmax(model.predict(speech_file), axis=1)
+    start = time.time()
+    spectogram_audio = convert_binary_audio_to_spectogram(audio_binary)
+    y_pred = np.argmax(model.predict(spectogram_audio), axis=1)
+    end = time.time()
+    prediction_time = end - start
+    return y_pred, prediction_time
 
-    # if speech_file is entire dataset and prediction is made on test dataset
-    t, test_ds, x, y, z = preprocess(pathlib.Path(speech_file))
-    test_audio = []
-    test_labels = []
+    # # if speech_file is entire dataset and prediction is made on test dataset
+    # t, test_ds, x, y, z = preprocess(pathlib.Path(speech_file))
+    # test_audio = []
+    # test_labels = []
+    #
+    # for audio, label in test_ds:
+    #     test_audio.append(audio.numpy())
+    #     test_labels.append(label.numpy())
+    #
+    # test_audio = np.array(test_audio)
+    # test_labels = np.array(test_labels)
+    #
+    # y_pred = np.argmax(model.predict(test_audio), axis=1)
+    # y_true = test_labels
+    #
+    # # calculate the accuracy
+    # test_acc = sum(y_pred == y_true) / len(y_true)
+    # print(test_acc)
+    #
+    # # save the prediction
+    # np.savetxt("prediction.csv", y_pred, delimiter=",")
 
-    for audio, label in test_ds:
-        test_audio.append(audio.numpy())
-        test_labels.append(label.numpy())
 
-    test_audio = np.array(test_audio)
-    test_labels = np.array(test_labels)
-
-    y_pred = np.argmax(model.predict(test_audio), axis=1)
-    y_true = test_labels
-
-    # calculate the accuracy
-    test_acc = sum(y_pred == y_true) / len(y_true)
-    print(test_acc)
-
-    # save the prediction
-    np.savetxt("prediction.csv", y_pred, delimiter=",")
+# TODO: Fix conversion of audio binary to spectogram with tensor shape (None, 124, 129, 1)
+def convert_binary_audio_to_spectogram(audio_binary):
+    wave_audio = decode_audio(audio_binary)
+    spectogram_audio = get_spectrogram(wave_audio)
+    return spectogram_audio
 
 
 if __name__ == '__main__':
