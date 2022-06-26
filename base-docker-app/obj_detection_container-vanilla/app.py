@@ -60,22 +60,14 @@ model = load_speech_rec_model_from(model_path)
 
 
 # routing http posts to this method
-@app.route('/api/detect', methods=['POST', 'GET'])
+@app.route('/api/detect', methods=['GET'])
 def main():
-    data_input = request.values.get('input')
-    output = request.values.get('output')
-    # output = request.form.get('output')
-
-    path = data_input
-    filename_image = {}
+    file_path = request.args['file']
 
     accepted_formats = ["wav"]
 
-    if not request.content_type.split(';')[0] == 'multipart/form-data':
-        return Response(status=415)
-
     try:
-        speech_file = get_file_binaries_from_request(accepted_formats)
+        speech_file = get_file_tensor_from_request(file_path, accepted_formats)
     except KeyError:
         return Response(status=400)
     except AssertionError:
@@ -87,12 +79,18 @@ def main():
     return jsonify(data), status_code
 
 
-def get_file_binaries_from_request(accepted_types, file_name="file"):
-    speech_file = request.files[file_name]
-    filetype = speech_file.filename.split('.')[-1]
+def get_file_tensor_from_request(path, accepted_types):
+    filetype = path.split('.')[-1]
     if filetype not in accepted_types:
         raise AssertionError
-    return speech_file.read()
+    return open_local_file(path)
+
+
+def open_local_file(path):
+    try:
+        return tf.io.read_file(path)
+    except Exception:
+        raise AssertionError
 
 
 def detection_loop(audio_binary):
