@@ -32,7 +32,6 @@ from preprocess import decode_audio, get_spectrogram
 
 import tensorflow as tf
 from tensorflow import keras
-from preprocess import preprocess
 
 
 ######## TODO ########
@@ -97,11 +96,10 @@ def get_file_binaries_from_request(accepted_types, file_name="file"):
 
 def detection_loop(audio_binary):
     # TODO: --> Speech_file is a SINGLE .wav speech file in binary format passed via the POST or GET request.
-    # ?????? how does the speech_file look like ??????
     # if it only contains audio (no label):
     start = time.time()
-    spectogram_audio = convert_binary_audio_to_spectogram(audio_binary)
-    y_pred = np.argmax(model.predict(spectogram_audio), axis=1)
+    audio = convert_binary_audio_to_spectogram(audio_binary)
+    y_pred = np.argmax(model.predict(audio), axis=1)
     end = time.time()
     prediction_time = end - start
     return y_pred, prediction_time
@@ -131,9 +129,13 @@ def detection_loop(audio_binary):
 
 # TODO: Fix conversion of audio binary to spectogram with tensor shape (None, 124, 129, 1)
 def convert_binary_audio_to_spectogram(audio_binary):
-    wave_audio = decode_audio(audio_binary)
-    spectogram_audio = get_spectrogram(wave_audio)
-    return spectogram_audio
+    AUTOTUNE = tf.data.AUTOTUNE
+
+    waveform = decode_audio(audio_binary)
+    spectogram_audio = get_spectrogram(waveform)
+
+    audio = np.expand_dims(np.array(spectogram_audio), axis=0)
+    return audio
 
 
 if __name__ == '__main__':
