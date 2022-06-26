@@ -28,7 +28,7 @@ import logging
 from datetime import datetime
 import pathlib
 import argparse
-from preprocess import decode_audio, get_spectrogram
+from preprocess import decode_audio, get_spectrogram, preprocess
 
 import tensorflow as tf
 from tensorflow import keras
@@ -98,37 +98,17 @@ def detection_loop(audio_binary):
     start = time.time()
     audio = convert_binary_audio_to_spectogram(audio_binary)
     y_pred = np.argmax(model.predict(audio), axis=1)
+
+    # load commands to get the actual word of the prediction
+    commands = commands['backward', 'bed', 'bird', 'cat', 'dog', 'down', 'eight', 'five', 'follow', 'forward', 'four', 'go', 'happy', 'house', 'learn', 'left', 'marvin', 'nine', 'no', 'off', 'on', 'one', 'right', 'seven', 'sheila', 'six', 'stop', 'three', 'tree', 'two', 'up','visual', 'wow', 'yes', 'zero']
+    prediction = commands[y_pred[0]]
+
     end = time.time()
     prediction_time = end - start
-    return y_pred, prediction_time
-
-    # # if speech_file is entire dataset and prediction is made on test dataset
-    # t, test_ds, x, y, z = preprocess(pathlib.Path(speech_file))
-    # test_audio = []
-    # test_labels = []
-    #
-    # for audio, label in test_ds:
-    #     test_audio.append(audio.numpy())
-    #     test_labels.append(label.numpy())
-    #
-    # test_audio = np.array(test_audio)
-    # test_labels = np.array(test_labels)
-    #
-    # y_pred = np.argmax(model.predict(test_audio), axis=1)
-    # y_true = test_labels
-    #
-    # # calculate the accuracy
-    # test_acc = sum(y_pred == y_true) / len(y_true)
-    # print(test_acc)
-    #
-    # # save the prediction
-    # np.savetxt("prediction.csv", y_pred, delimiter=",")
+    return prediction, prediction_time
 
 
-# TODO: Fix conversion of audio binary to spectogram with tensor shape (None, 124, 129, 1)
 def convert_binary_audio_to_spectogram(audio_binary):
-    AUTOTUNE = tf.data.AUTOTUNE
-
     waveform = decode_audio(audio_binary)
     spectogram_audio = get_spectrogram(waveform)
 
