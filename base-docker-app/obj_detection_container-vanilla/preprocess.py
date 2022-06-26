@@ -59,7 +59,8 @@ def get_spectrogram(waveform):
 def preprocess(data_dir):
     # extract the commands (no, yes, down, go, left, up, right, stop)
     commands = np.array(tf.io.gfile.listdir(str(data_dir)))
-    commands = commands[commands != 'README.md']
+    mask = (commands != 'README.md') & (commands!='LICENSE') & (commands!='.DS_Store') & (commands!='testing_list.txt') & (commands!='validation_list.txt') & (commands!='_background_noise_')
+    commands = commands[mask]
     print('Commands:', commands)
 
     #extract the audio clips
