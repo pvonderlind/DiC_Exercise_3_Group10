@@ -54,7 +54,7 @@ model.compile(
 )
 
 # train the model
-EPOCHS = 10
+EPOCHS = 10000
 model.fit(
     train_ds,
     validation_data=val_ds,

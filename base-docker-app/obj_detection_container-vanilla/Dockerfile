@@ -19,4 +19,4 @@ RUN ls
 
 ENTRYPOINT [ "python3" ]
 
-CMD [ "app.py" ]
+CMD [ "app.py", "saved_model/speech_rec_model" ]
