@@ -100,7 +100,7 @@ def detection_loop(audio_binary):
     y_pred = np.argmax(model.predict(audio), axis=1)
 
     # load commands to get the actual word of the prediction
-    commands = commands['backward', 'bed', 'bird', 'cat', 'dog', 'down', 'eight', 'five', 'follow', 'forward', 'four', 'go', 'happy', 'house', 'learn', 'left', 'marvin', 'nine', 'no', 'off', 'on', 'one', 'right', 'seven', 'sheila', 'six', 'stop', 'three', 'tree', 'two', 'up','visual', 'wow', 'yes', 'zero']
+    commands = commands['backward', 'follow', 'go', 'left', 'no', 'off', 'on', 'right', 'stop', 'up', 'yes']
     prediction = commands[y_pred[0]]
 
     end = time.time()
