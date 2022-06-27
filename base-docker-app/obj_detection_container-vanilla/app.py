@@ -74,8 +74,7 @@ def main():
 
     predicted_label, prediction_time = detection_loop(speech_file)
     data = {"label": predicted_label, "time": prediction_time}
-    status_code = Response(status=200)
-    return jsonify(data), status_code
+    return data
 
 
 def get_file_tensor_from_request(path, accepted_types):
