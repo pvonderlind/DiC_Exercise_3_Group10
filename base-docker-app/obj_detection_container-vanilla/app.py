@@ -14,7 +14,6 @@
 # limitations under the License.
 
 import os
-import tflite_runtime.interpreter as tflite
 import platform
 import datetime
 import time
@@ -92,14 +91,13 @@ def open_local_file(path):
 
 
 def detection_loop(audio_binary):
-    # TODO: --> Speech_file is a SINGLE .wav speech file in binary format passed via the POST or GET request.
     # if it only contains audio (no label):
     start = time.time()
     audio = convert_binary_audio_to_spectogram(audio_binary)
     y_pred = np.argmax(model.predict(audio), axis=1)
 
     # load commands to get the actual word of the prediction
-    commands = commands['backward', 'follow', 'go', 'left', 'no', 'off', 'on', 'right', 'stop', 'up', 'yes']
+    commands = ['backward', 'follow', 'go', 'left', 'no', 'off', 'on', 'right', 'stop', 'up', 'yes']
     prediction = commands[y_pred[0]]
 
     end = time.time()

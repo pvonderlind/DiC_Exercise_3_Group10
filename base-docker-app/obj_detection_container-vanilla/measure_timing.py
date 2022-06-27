@@ -16,26 +16,29 @@ path = args.path
 data_dir = pathlib.Path(path)
 
 result_dicts = []
-for path, subdirs, files in os.walk(data_dir):
-    for name in files:
-        audio_file = pathlib.PurePath(path, name)
+try:
+    for path, subdirs, files in os.walk(data_dir):
+        for name in files:
+            audio_file = pathlib.PurePath(path, name)
 
-        start = time.time()
-        params = {"file": audio_file}
-        r = requests.get(args.url, params=params)
-        end = time.time()
-        request_time = end - start
+            start = time.time()
+            params = {"file": audio_file}
+            r = requests.get(args.url, params=params)
+            end = time.time()
+            request_time = end - start
 
-        if r.status_code != 200:
-            print(f"An error, a request got back status code {r.status_code}. Exiting application!")
-            exit(-1)
+            if r.status_code != 200:
+                print(f"An error, a request got back status code {r.status_code}. Exiting application!")
+                exit(-1)
 
-        data = r.json()
+            data = r.json()
 
-        file_results = {"request_time": request_time, "file": audio_file,
-                        "prediction_time": data['time'], "prediction_label": data['label']}
-        result_dicts.append(file_results)
-
-timestr = datetime.now().strftime("%Y_%m_%d_%Hh%Mm")
-result_df = pd.DataFrame(result_dicts)
-result_df.to_csv(f"results_{timestr}.csv")
+            file_results = {"request_time": request_time, "file": audio_file,
+                            "prediction_time": data['time'], "prediction_label": data['label']}
+            result_dicts.append(file_results)
+except KeyboardInterrupt:
+    print("Interrupted via keyboard. Writing progress to csv and closing ...")
+finally:
+    timestr = datetime.now().strftime("%Y_%m_%d_%Hh%Mm")
+    result_df = pd.DataFrame(result_dicts)
+    result_df.to_csv(f"results_{timestr}.csv")
