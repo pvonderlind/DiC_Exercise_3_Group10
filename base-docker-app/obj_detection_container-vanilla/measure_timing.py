@@ -22,7 +22,7 @@ try:
             audio_file = pathlib.PurePath(path, name)
 
             start = time.time()
-            params = {"file": audio_file}
+            params = {"file": audio_file.as_posix()}
             r = requests.get(args.url, params=params)
             end = time.time()
             request_time = end - start

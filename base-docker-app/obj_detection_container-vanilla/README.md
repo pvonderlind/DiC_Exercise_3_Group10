@@ -32,4 +32,4 @@ use the following two URLs:
 
 A call to measure timing for the BIG dataset could be as follows to test the remote execution:
 
-```python measure_time.py BIG http://s25.lbd.hpc.tuwien.ac.at:5010/api/detect```
+```python measure_timing.py BIG http://s25.lbd.hpc.tuwien.ac.at:5010/api/detect```
